@@ -1,0 +1,156 @@
+{
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "confirm": "Подтвердить",
+    "back": "Назад",
+    "email": "Email",
+    "connect": "Привязать",
+    "disconnect": "Отвязать",
+    "connected": "Подключено",
+    "notConnected": "Не подключено",
+    "active": "Активен"
+  },
+
+  "catalog": {
+    "search": "Поиск товаров",
+    "allCategories": "Все",
+    "outOfStock": "Нет в наличии",
+    "empty": "Ничего не найдено",
+    "filters": {
+      "title": "Фильтры", "sort": "Сортировка", "size": "Размер", "color": "Цвет",
+      "price": "Цена, ₽", "from": "От", "to": "До",
+      "inStock": "Только в наличии", "reset": "Сбросить", "apply": "Применить"
+    },
+    "sort": { "new": "Новинки", "price_asc": "Дешевле", "price_desc": "Дороже" }
+  },
+
+  "product": {
+    "color": "Цвет",
+    "size": "Размер",
+    "inStock": "В наличии",
+    "lowStock": "Осталось {count} шт.",
+    "outOfStock": "Нет в наличии",
+    "addToCart": "В корзину",
+    "adding": "Добавляем…",
+    "added": "Добавлено в корзину",
+    "errors": {
+      "unauthorized": "Войдите, чтобы добавить в корзину",
+      "out_of_stock": "Этого варианта уже нет в наличии"
+    }
+  },
+
+  "meta": {
+    "settingsTitle": "Настройки",
+    "forbiddenTitle": "Доступ запрещён",
+    "adminTitle": "Админ-панель",
+    "homeTitle": "Главная",
+    "loginTitle": "Вход",
+    "registerTitle": "Регистрация",
+    "userNotFound": "Пользователь не найден"
+  },
+
+  "profile": {
+    "lang": "Язык",
+    "settings": "Настройки",
+    "links": "Ссылки",
+    "admin": "Админ",
+    "adminSub": "Админ-панель",
+    "subscription": "Подписка",
+    "statusFree": "Free",
+    "statusPremium": "Premium · до {date}",
+    "premiumActivated": "Premium активирован",
+    "paymentFailed": "Не удалось оплатить",
+    "openInTelegram": "Откройте приложение в Telegram"
+  },
+
+  "cart": {
+    "title": "Корзина",
+    "emptyTitle": "Корзина пуста",
+    "emptyText": "Добавьте что-нибудь из каталога",
+    "toCatalog": "В каталог",
+    "total": "Итого",
+    "checkout": "Оформить заказ",
+    "limited": "Доступно только {count} шт.",
+    "unavailable": "Нет в наличии",
+    "issues": "Некоторые товары изменились: проверьте количество перед оформлением."
+  },
+
+  "navigation": {
+    "home": "Главная",
+    "cart": "Корзина",
+    "profile": "Профиль",
+    "catalog": "Каталог",
+    "saved": "Сохраненные"
+  },
+
+  "saved": {
+    "title": "Избранное",
+    "emptyTitle": "Пока пусто",
+    "emptyText": "Нажмите на сердечко у товара, чтобы сохранить его",
+    "toCatalog": "В каталог",
+    "add": "Добавить в избранное",
+    "remove": "Убрать из избранного"
+  },
+
+  "LanguageSwitcher": {
+    "title": "Выберите язык"
+  },
+
+  "dashboard": {
+    "title": "Дашборд",
+    "decription": "Добро пожаловать в ваш дашборд!"
+  },
+
+  "forbidden": {
+    "unauthenticatedTitle": "Нужна авторизация",
+    "unauthenticatedDescription": "Чтобы попасть на эту страницу, сначала войдите в аккаунт.",
+    "unauthenticatedAction": "Войти",
+    "forbiddenTitle": "Доступ запрещён",
+    "forbiddenDescription": "У вас недостаточно прав для просмотра этой страницы.",
+    "forbiddenAction": "На главную"
+  },
+
+  "errorPage": {
+    "title": "Что-то пошло не так",
+    "description": "Произошла непредвиденная ошибка. Мы уже знаем о проблеме — попробуйте обновить страницу.",
+    "errorId": "ID ошибки: {digest}",
+    "retry": "Попробовать снова",
+    "home": "На главную"
+  },
+
+  "roleSelect": {
+    "success": "Роль обновлена",
+    "confirmTitle": "Выдать права администратора?",
+    "confirmDescription": "Пользователь «{userLabel}» получит полный доступ к админ-панели, включая управление ролями других пользователей.",
+    "grantAccess": "Выдать права"
+  },
+
+  "adminUsers": {
+    "title": "Пользователи",
+    "loadError": "Не удалось загрузить пользователей.",
+    "columnUser": "Пользователь",
+    "columnEmail": "Email",
+    "columnTelegramId": "Telegram ID",
+    "columnRole": "Роль",
+    "loading": "Загрузка...",
+    "empty": "Пользователи не найдены",
+    "total": "Всего: {total}",
+    "searchPlaceholder": "Поиск по имени или telegram ID...",
+    "pagination": "Страница {page} из {totalPages}",
+    "next": "Вперёд"
+  },
+
+  "NotFound": {
+    "title": "Страница не найдена",
+    "description": "Запрашиваемая страница не существует.",
+    "backHome": "На главную"
+  },
+
+  "themes": {
+    "dark": "Тёмная",
+    "light": "Светлая",
+    "system": "Системная",
+    "toggle": "Изменить тему"
+  }
+}

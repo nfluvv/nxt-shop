@@ -1,0 +1,264 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id         String   @id @default(cuid())
+  telegramId String   @unique
+  name       String?
+  username   String?  @unique
+  image      String?
+  role       Role     @default(USER)
+  phone      String?  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  cart   CartItem[]
+  orders Order[]
+
+  @@index([name])
+  @@map("users")
+  savedProducts SavedProduct[]
+}
+
+model RoleChangeLog {
+  id             String   @id @default(cuid())
+  targetId       String
+  targetUsername String?
+  changedById    String
+  fromRole       Role
+  toRole         Role
+  createdAt      DateTime @default(now())
+
+  @@map("role_change_logs")
+}
+
+model RateLimitAttempt {
+  id         String   @id @default(cuid())
+  identifier String
+  createdAt  DateTime @default(now())
+
+  @@index([identifier, createdAt])
+  @@map("rate_limit_attempts")
+}
+
+model Banner {
+  id        String   @id @default(cuid())
+  imageUrl  String
+  title     String?
+  link      String?  
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([isActive, sortOrder])
+  @@map("banners")
+}
+
+model Collection {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  title     String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+
+  items CollectionProduct[]
+
+  @@map("collections")
+}
+
+model CollectionProduct {
+  collectionId String
+  productId    String
+  sortOrder    Int    @default(0)
+
+  collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([collectionId, productId])
+  @@map("collection_products")
+}
+
+model Category {
+  id        String  @id @default(cuid())
+  slug      String  @unique
+  name      String
+  imageUrl  String?
+  sortOrder Int     @default(0)
+  parentId  String?
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+
+  @@index([parentId])
+  @@map("categories")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String?
+  categoryId  String
+  price       Int
+  oldPrice    Int?     
+  currency    String   @default("RUB")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category    Category            @relation(fields: [categoryId], references: [id])
+  images      ProductImage[]
+  variants    ProductVariant[]
+  collections CollectionProduct[]
+
+  @@index([categoryId, isActive])
+  @@index([price])
+  @@index([createdAt])
+  @@map("products")
+  savedBy SavedProduct[]
+}
+
+model SavedProduct {
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@id([userId, productId])
+  @@index([userId, createdAt])
+  @@map("saved_products")
+}
+
+model ProductImage {
+  id        String @id @default(cuid())
+  productId String
+  url       String
+  sortOrder Int    @default(0)
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId, sortOrder])
+  @@map("product_images")
+}
+
+model ProductVariant {
+  id         String  @id @default(cuid())
+  productId  String
+  sku        String? @unique
+  size       String?
+  color      String?
+  colorHex   String?
+  priceDelta Int     @default(0)
+  stock      Int     @default(0)
+  isActive   Boolean @default(true)
+
+  product    Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@unique([productId, size, color])
+  @@index([productId])
+  @@map("product_variants")
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  userId    String
+  variantId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, variantId])
+  @@map("cart_items")
+}
+
+model DeliveryMethod {
+  id          String  @id @default(cuid())
+  code        String  @unique
+  name        String
+  price       Int     @default(0)
+  needAddress Boolean @default(true)
+  isActive    Boolean @default(true)
+  sortOrder   Int     @default(0)
+
+  orders Order[]
+
+  @@map("delivery_methods")
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PAID
+  SHIPPED
+  DONE
+  CANCELLED
+  REFUNDED
+}
+
+model Order {
+  id               String      @id @default(cuid())
+  number           Int         @unique @default(autoincrement())
+  userId           String
+  status           OrderStatus @default(PENDING)
+
+  contactName      String
+  contactPhone     String
+  deliveryMethodId String
+  deliveryPrice    Int         @default(0)
+  address          String?
+  comment          String?
+
+  itemsTotal       Int
+  total            Int
+  currency         String      @default("RUB")
+
+  chargeId         String?     @unique
+  paidAt           DateTime?
+
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  user           User           @relation(fields: [userId], references: [id])
+  deliveryMethod DeliveryMethod @relation(fields: [deliveryMethodId], references: [id])
+  items          OrderItem[]
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  variantId String?
+  title     String
+  size      String?
+  color     String?
+  imageUrl  String?
+  price     Int
+  quantity  Int
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@map("order_items")
+}
