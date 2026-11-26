@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState, useTransition } from "react"
+import { useForm, useWatch } from "react-hook-form"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   Button,
@@ -20,7 +21,27 @@ interface Props {
   facets: { sizes: string[]; colors: { name: string; hex: string | null }[] }
 }
 
+interface FiltersValues {
+  sort: string
+  sizes: string[]
+  colors: string[]
+  minPrice: string
+  maxPrice: string
+  inStock: boolean
+}
+
 const SORTS = ["new", "price_asc", "price_desc"] as const
+
+const FILTER_KEYS = ["sort", "size", "color", "minPrice", "maxPrice", "inStock"]
+
+const valuesFromUrl = (sp: URLSearchParams): FiltersValues => ({
+  sort: sp.get("sort") ?? "new",
+  sizes: sp.getAll("size"),
+  colors: sp.getAll("color"),
+  minPrice: sp.get("minPrice") ?? "",
+  maxPrice: sp.get("maxPrice") ?? "",
+  inStock: sp.get("inStock") === "1",
+})
 
 export function CatalogFilters({ categories, facets }: Props) {
   const router = useRouter()
@@ -28,6 +49,7 @@ export function CatalogFilters({ categories, facets }: Props) {
   const searchParams = useSearchParams()
   const t = useTranslations("catalog")
   const [, startTransition] = useTransition()
+  const [open, setOpen] = useState(false)
 
   const apply = (mutate: (p: URLSearchParams) => void) => {
     const params = new URLSearchParams(searchParams.toString())
@@ -37,11 +59,14 @@ export function CatalogFilters({ categories, facets }: Props) {
     })
   }
 
-  const [search, setSearch] = useState(searchParams.get("query") ?? "")
+  const searchForm = useForm<{ query: string }>({
+    defaultValues: { query: searchParams.get("query") ?? "" },
+  })
+  const query = useWatch({ control: searchForm.control, name: "query" })
 
   useEffect(() => {
     const id = setTimeout(() => {
-      const value = search.trim()
+      const value = (query ?? "").trim()
       if (value === (searchParams.get("query") ?? "")) return
 
       const params = new URLSearchParams(searchParams.toString())
@@ -54,55 +79,62 @@ export function CatalogFilters({ categories, facets }: Props) {
     }, 400)
 
     return () => clearTimeout(id)
-  }, [search, searchParams, pathname, router, startTransition])
-  
+  }, [query, searchParams, pathname, router, startTransition])
+
   const activeCategory = searchParams.get("category")
 
-  const [open, setOpen] = useState(false)
-  const [sort, setSort] = useState("new")
-  const [sizes, setSizes] = useState<string[]>([])
-  const [colors, setColors] = useState<string[]>([])
-  const [minPrice, setMinPrice] = useState("")
-  const [maxPrice, setMaxPrice] = useState("")
-  const [inStock, setInStock] = useState(false)
+  const filtersForm = useForm<FiltersValues>({
+    defaultValues: valuesFromUrl(searchParams),
+  })
+  const draft = useWatch({ control: filtersForm.control })
 
-  const syncDraftFromUrl = () => {
-    setSort(searchParams.get("sort") ?? "new")
-    setSizes(searchParams.getAll("size"))
-    setColors(searchParams.getAll("color"))
-    setMinPrice(searchParams.get("minPrice") ?? "")
-    setMaxPrice(searchParams.get("maxPrice") ?? "")
-    setInStock(searchParams.get("inStock") === "1")
-  }
+  const draftSizes = draft.sizes ?? []
+  const draftColors = draft.colors ?? []
+  const draftStock = draft.inStock ?? false
 
   const handleOpenChange = (next: boolean) => {
-    if (next) syncDraftFromUrl()
+    if (next) filtersForm.reset(valuesFromUrl(searchParams))
     setOpen(next)
   }
 
-  const toggle = (list: string[], set: (v: string[]) => void, v: string) =>
-    set(list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
-
-  const submit = () => {
-    apply((p) => {
-      p.delete("sort"); p.delete("size"); p.delete("color")
-      p.delete("minPrice"); p.delete("maxPrice"); p.delete("inStock")
-      if (sort !== "new") p.set("sort", sort)
-      sizes.forEach((s) => p.append("size", s))
-      colors.forEach((c) => p.append("color", c))
-      if (minPrice) p.set("minPrice", minPrice)
-      if (maxPrice) p.set("maxPrice", maxPrice)
-      if (inStock) p.set("inStock", "1")
-    })
-    setOpen(false)
+  const toggle = (name: "sizes" | "colors", v: string) => {
+    const list = filtersForm.getValues(name)
+    filtersForm.setValue(
+      name,
+      list.includes(v) ? list.filter((x) => x !== v) : [...list, v]
+    )
   }
 
-  const reset = () => {
+  const clampPrices = (changed: "minPrice" | "maxPrice") => {
+    const min = filtersForm.getValues("minPrice")
+    const max = filtersForm.getValues("maxPrice")
+    if (!min || !max || Number(min) <= Number(max)) return
+
+    if (changed === "minPrice") filtersForm.setValue("minPrice", max)
+    else filtersForm.setValue("maxPrice", min)
+  }
+
+  const submit = filtersForm.handleSubmit((values) => {
+    const { maxPrice } = values
+    const minPrice =
+      values.minPrice && maxPrice && Number(values.minPrice) > Number(maxPrice)
+        ? maxPrice
+        : values.minPrice
+
     apply((p) => {
-      ;["sort", "size", "color", "minPrice", "maxPrice", "inStock"].forEach((k) =>
-        p.delete(k)
-      )
+      FILTER_KEYS.forEach((k) => p.delete(k))
+      if (values.sort !== "new") p.set("sort", values.sort)
+      values.sizes.forEach((s) => p.append("size", s))
+      values.colors.forEach((c) => p.append("color", c))
+      if (minPrice) p.set("minPrice", minPrice)
+      if (maxPrice) p.set("maxPrice", maxPrice)
+      if (values.inStock) p.set("inStock", "1")
     })
+    setOpen(false)
+  })
+
+  const reset = () => {
+    apply((p) => FILTER_KEYS.forEach((k) => p.delete(k)))
     setOpen(false)
   }
 
@@ -116,13 +148,17 @@ export function CatalogFilters({ categories, facets }: Props) {
   const chip = (active: boolean) =>
     cn(
       "rounded-xl px-3.5 py-1.5 text-sm transition-colors",
-      active && "border-primary bg-primary/15 font-medium"
+      active && "bg-primary/15 font-medium"
     )
 
   return (
-    <div className="flex flex-col gap-3 pt-2"> 
-      <div className="-mx-4 flex gap-2 overflow-x-auto px-4 scrollbar-none">
-        <button type="button" onClick={() => apply((p) => p.delete("category"))} className={cn(chip(!activeCategory), "shrink-0")}>
+    <div className="flex flex-col gap-3 pt-2">
+      <div className="-mx-4 flex scrollbar-none gap-2 overflow-x-auto px-4">
+        <button
+          type="button"
+          onClick={() => apply((p) => p.delete("category"))}
+          className={cn(chip(!activeCategory), "shrink-0")}
+        >
           {t("allCategories")}
         </button>
         {categories.map((c) => (
@@ -142,16 +178,15 @@ export function CatalogFilters({ categories, facets }: Props) {
           <Search className="pointer-events-none absolute top-1/2 left-3.5 h-4 w-4 -translate-y-1/2 text-muted-foreground/60" />
           <Input
             placeholder={t("search")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            {...searchForm.register("query")}
             className="h-10 rounded-xl pr-10 pl-10 shadow-none"
           />
-          {search && (
+          {query && (
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              onClick={() => setSearch("")}
+              onClick={() => searchForm.setValue("query", "")}
               className="absolute top-1/2 right-1 h-8 w-8 -translate-y-1/2 rounded-lg"
             >
               <X className="h-3.5 w-3.5" />
@@ -163,7 +198,7 @@ export function CatalogFilters({ categories, facets }: Props) {
           <DialogTrigger asChild>
             <Button
               variant="outline"
-              className="relative h-10 w-10 rounded-xl border-border/50 bg-muted/30 p-0 shadow-none"
+              className="relative h-10 w-10 rounded-xl bg-muted/30 p-0 shadow-none"
             >
               <SlidersHorizontal className="h-4 w-4" />
               {activeCount > 0 && (
@@ -179,61 +214,107 @@ export function CatalogFilters({ categories, facets }: Props) {
               <DialogTitle>{t("filters.title")}</DialogTitle>
             </DialogHeader>
 
-            <Section title={t("filters.sort")}>
-              {SORTS.map((s) => (
-                <button key={s} type="button" onClick={() => setSort(s)} className={chip(sort === s)}>
-                  {t(`sort.${s}`)}
-                </button>
-              ))}
-            </Section>
-
-            {facets.sizes.length > 0 && (
-              <Section title={t("filters.size")}>
-                {facets.sizes.map((s) => (
-                  <button key={s} type="button" onClick={() => toggle(sizes, setSizes, s)} className={chip(sizes.includes(s))}>
-                    {s}
-                  </button>
-                ))}
-              </Section>
-            )}
-
-            {facets.colors.length > 0 && (
-              <Section title={t("filters.color")}>
-                {facets.colors.map((c) => (
+            <form onSubmit={submit} className="flex flex-col gap-4">
+              <Section title={t("filters.sort")}>
+                {SORTS.map((s) => (
                   <button
-                    key={c.name}
+                    key={s}
                     type="button"
-                    onClick={() => toggle(colors, setColors, c.name)}
-                    className={cn(chip(colors.includes(c.name)), "flex items-center gap-2")}
+                    onClick={() => filtersForm.setValue("sort", s)}
+                    className={chip(draft.sort === s)}
                   >
-                    {c.hex && (
-                      <span className="h-3.5 w-3.5 rounded-full border" style={{ background: c.hex }} />
-                    )}
-                    {c.name}
+                    {t(`sort.${s}`)}
                   </button>
                 ))}
               </Section>
-            )}
 
-            <Section title={t("filters.price")}>
-              <div className="flex w-full gap-2">
-                <Input type="number" inputMode="numeric" min={0} placeholder={t("filters.from")} value={minPrice} onChange={(e) => setMinPrice(e.target.value)} className="h-10 rounded-xl" />
-                <Input type="number" inputMode="numeric" min={0} placeholder={t("filters.to")} value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} className="h-10 rounded-xl" />
+              {facets.sizes.length > 0 && (
+                <Section title={t("filters.size")}>
+                  {facets.sizes.map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => toggle("sizes", s)}
+                      className={chip(draftSizes.includes(s))}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </Section>
+              )}
+
+              {facets.colors.length > 0 && (
+                <Section title={t("filters.color")}>
+                  {facets.colors.map((c) => (
+                    <button
+                      key={c.name}
+                      type="button"
+                      onClick={() => toggle("colors", c.name)}
+                      className={cn(
+                        chip(draftColors.includes(c.name)),
+                        "flex items-center gap-2"
+                      )}
+                    >
+                      {c.hex && (
+                        <span
+                          className="h-3.5 w-3.5 rounded-full border"
+                          style={{ background: c.hex }}
+                        />
+                      )}
+                      {c.name}
+                    </button>
+                  ))}
+                </Section>
+              )}
+
+              <Section title={t("filters.price")}>
+                <div className="flex w-full gap-2">
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={0}
+                    max={draft.maxPrice || undefined}
+                    placeholder={t("filters.from")}
+                    {...filtersForm.register("minPrice", {
+                      onBlur: () => clampPrices("minPrice"),
+                    })}
+                    className="h-10 rounded-xl"
+                  />
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={draft.minPrice || 0}
+                    placeholder={t("filters.to")}
+                    {...filtersForm.register("maxPrice", {
+                      onBlur: () => clampPrices("maxPrice"),
+                    })}
+                    className="h-10 rounded-xl"
+                  />
+                </div>
+              </Section>
+
+              <button
+                type="button"
+                onClick={() => filtersForm.setValue("inStock", !draftStock)}
+                className={cn(chip(draftStock), "self-start")}
+              >
+                {t("filters.inStock")}
+              </button>
+
+              <div className="mt-2 flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={reset}
+                  className="h-11 flex-1 rounded-xl"
+                >
+                  {t("filters.reset")}
+                </Button>
+                <Button type="submit" className="h-11 flex-1 rounded-xl">
+                  {t("filters.apply")}
+                </Button>
               </div>
-            </Section>
-
-            <button type="button" onClick={() => setInStock((v) => !v)} className={cn(chip(inStock), "self-start")}>
-              {t("filters.inStock")}
-            </button>
-
-            <div className="mt-2 flex gap-2">
-              <Button variant="outline" onClick={reset} className="h-11 flex-1 rounded-xl">
-                {t("filters.reset")}
-              </Button>
-              <Button onClick={submit} className="h-11 flex-1 rounded-xl">
-                {t("filters.apply")}
-              </Button>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
@@ -241,7 +322,13 @@ export function CatalogFilters({ categories, facets }: Props) {
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
   return (
     <div className="flex flex-col gap-2">
       <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>

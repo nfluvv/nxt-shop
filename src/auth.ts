@@ -4,7 +4,7 @@ import Credentials from "next-auth/providers/credentials"
 import { prisma } from "@/shared/server/db/prisma"
 import { authConfig } from "@/auth.config"
 import { verifyInitData } from "@/shared/server/telegram/verify-init-data"
-import { findOrCreateTelegramUser } from "@/entities/user/api/find-or-create-telegram-user"
+import { findOrCreateTelegramUser } from "@/entities/user/server"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,

@@ -1,10 +1,7 @@
 import { notFound } from "next/navigation"
 import { Container } from "@/shared/client/ui"
-import {
-  getProductBySlug,
-  isProductSaved,
-} from "@/entities/product/api/queries"
-import { getCurrentUser } from "@/entities/user/api/queries"
+import { getProductBySlug, isProductSaved } from "@/entities/product/server"
+import { getCurrentUser } from "@/entities/user/server"
 import { ProductGallery } from "@/widgets/product-gallery"
 import { PurchasePanel } from "@/features/add-to-cart"
 import { SaveProductButton } from "@/features/save-product"
@@ -28,8 +25,12 @@ export async function ProductView({ slug }: { slug: string }) {
 
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-sm text-muted-foreground">{product.category.name}</p>
-            <h1 className="text-2xl font-bold leading-tight">{product.title}</h1>
+            <p className="text-sm text-muted-foreground">
+              {product.category.name}
+            </p>
+            <h1 className="text-2xl leading-tight font-bold">
+              {product.title}
+            </h1>
           </div>
 
           <SaveProductButton
@@ -54,7 +55,7 @@ export async function ProductView({ slug }: { slug: string }) {
         />
 
         {product.description && (
-          <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+          <p className="text-sm leading-relaxed whitespace-pre-line text-muted-foreground">
             {product.description}
           </p>
         )}

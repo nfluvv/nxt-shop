@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server"
 
 export async function EmptyCart() {
   const t = await getTranslations("cart")
-  
+
   return (
     <main className="py-2">
       <Container className="flex flex-col items-center justify-center gap-4 py-20 text-center">

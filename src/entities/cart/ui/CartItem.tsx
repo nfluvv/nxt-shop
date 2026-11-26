@@ -41,7 +41,10 @@ export function CartItem({ item, actions }: Props) {
       <div className="flex min-w-0 flex-1 flex-col">
         <Link
           href={`/product/${item.slug}`}
-          className={cn("line-clamp-2 text-sm leading-tight", unavailable && "text-muted-foreground")}
+          className={cn(
+            "line-clamp-2 text-sm leading-tight",
+            unavailable && "text-muted-foreground"
+          )}
         >
           {item.title}
         </Link>
@@ -61,12 +64,22 @@ export function CartItem({ item, actions }: Props) {
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-2">
           <div>
-            <p className={cn("font-semibold", unavailable && "text-muted-foreground line-through")}>
-              {formatPrice(item.unitPrice * (unavailable ? item.quantity : item.payableQuantity), item.currency)}
+            <p
+              className={cn(
+                "font-semibold",
+                unavailable && "text-muted-foreground line-through"
+              )}
+            >
+              {formatPrice(
+                item.unitPrice *
+                  (unavailable ? item.quantity : item.payableQuantity),
+                item.currency
+              )}
             </p>
             {item.payableQuantity > 1 && (
               <p className="text-xs text-muted-foreground">
-                {formatPrice(item.unitPrice, item.currency)} × {item.payableQuantity}
+                {formatPrice(item.unitPrice, item.currency)} ×{" "}
+                {item.payableQuantity}
               </p>
             )}
           </div>

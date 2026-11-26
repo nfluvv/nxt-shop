@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
 import { auth } from "@/auth"
-import { getAllUsers } from "@/entities/user/api/queries"
+import { getAllUsers } from "@/entities/user/server"
 
 export async function GET(request: NextRequest) {
   const session = await auth()

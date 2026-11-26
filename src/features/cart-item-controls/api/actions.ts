@@ -3,7 +3,7 @@
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/shared/server/db/prisma"
-import { getCurrentUser } from "@/entities/user/api/queries"
+import { getCurrentUser } from "@/entities/user/server"
 
 const updateSchema = z.object({
   cartItemId: z.string().min(1),
@@ -15,10 +15,11 @@ const removeSchema = z.object({
 })
 
 export type CartActionResult =
-  | { ok: true }
-  | { ok: false; error: "unauthorized" | "not_found" }
+  { ok: true } | { ok: false; error: "unauthorized" | "not_found" }
 
-export async function updateCartQuantity(input: unknown): Promise<CartActionResult> {
+export async function updateCartQuantity(
+  input: unknown
+): Promise<CartActionResult> {
   const user = await getCurrentUser()
   if (!user) return { ok: false, error: "unauthorized" }
 
@@ -31,9 +32,7 @@ export async function updateCartQuantity(input: unknown): Promise<CartActionResu
   if (!item) return { ok: false, error: "not_found" }
 
   const next =
-    quantity > item.quantity
-      ? Math.min(quantity, item.variant.stock)
-      : quantity
+    quantity > item.quantity ? Math.min(quantity, item.variant.stock) : quantity
 
   if (next !== item.quantity && next >= 1) {
     await prisma.cartItem.update({
@@ -46,7 +45,9 @@ export async function updateCartQuantity(input: unknown): Promise<CartActionResu
   return { ok: true }
 }
 
-export async function removeFromCart(input: unknown): Promise<CartActionResult> {
+export async function removeFromCart(
+  input: unknown
+): Promise<CartActionResult> {
   const user = await getCurrentUser()
   if (!user) return { ok: false, error: "unauthorized" }
 

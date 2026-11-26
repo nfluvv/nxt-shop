@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/entities/user/api/queries"
+import { getCurrentUser } from "@/entities/user/server"
 import { BottomNavItems } from "./BottomNavItems"
 
 export async function Navigation() {

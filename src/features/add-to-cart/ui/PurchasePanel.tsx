@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useMemo } from "react"
+import { useForm, useWatch } from "react-hook-form"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/shared/client/ui"
 import { cn } from "@/shared/client/lib/utils"
 import { useTranslations } from "next-intl"
@@ -24,25 +26,58 @@ interface Props {
   variants: VariantDTO[]
 }
 
+interface FormValues {
+  color: string | null
+  size: string | null
+}
+
 const LOW_STOCK = 5
+
+const haptic = (type: "success" | "error") =>
+  window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred(type)
 
 export function PurchasePanel({ price, oldPrice, currency, variants }: Props) {
   const t = useTranslations("product")
-  const [isPending, startTransition] = useTransition()
+  const queryClient = useQueryClient()
 
   const initial = variants.find((v) => v.stock > 0) ?? variants[0]
-  const [color, setColor] = useState(initial?.color ?? null)
-  const [size, setSize] = useState(initial?.size ?? null)
+  const { control, setValue, handleSubmit } = useForm<FormValues>({
+    defaultValues: {
+      color: initial?.color ?? null,
+      size: initial?.size ?? null,
+    },
+  })
+  const color = useWatch({ control, name: "color" })
+  const size = useWatch({ control, name: "size" })
 
-  const colors = [
-    ...new Map(
-      variants.filter((v) => v.color).map((v) => [v.color!, v.colorHex])
-    ).entries(),
-  ].map(([name, hex]) => ({
-    name,
-    hex,
-    available: variants.some((v) => v.color === name && v.stock > 0),
-  }))
+  const addMutation = useMutation({
+    mutationFn: (variantId: string) => addToCart({ variantId, quantity: 1 }),
+    onSuccess: (res) => {
+      if (res.ok) {
+        toast.success(t("added"))
+        haptic("success")
+        queryClient.invalidateQueries({ queryKey: ["cart"] })
+      } else {
+        toast.error(t(`errors.${res.error}`))
+        haptic("error")
+      }
+    },
+    onError: () => haptic("error"),
+  })
+
+  const colors = useMemo(
+    () =>
+      [
+        ...new Map(
+          variants.filter((v) => v.color).map((v) => [v.color!, v.colorHex])
+        ).entries(),
+      ].map(([name, hex]) => ({
+        name,
+        hex,
+        available: variants.some((v) => v.color === name && v.stock > 0),
+      })),
+    [variants]
+  )
 
   const variantsOfColor = variants.filter((v) => v.color === color)
   const hasSizes = variants.some((v) => v.size)
@@ -52,28 +87,22 @@ export function PurchasePanel({ price, oldPrice, currency, variants }: Props) {
   const discounted = oldPrice && oldPrice > price
   const outOfStock = !selected || selected.stock < 1
 
-  const handleAdd = () => {
-  if (!selected || outOfStock) return
-
-  startTransition(async () => {
-    const res = await addToCart({ variantId: selected.id, quantity: 1 })
-    if (res.ok) {
-      toast.success(t("added"))
-      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred("success")
-    } else {
-      toast.error(t(`errors.${res.error}`))
-      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred("error")
-    }
+  const onSubmit = handleSubmit(() => {
+    if (!selected || outOfStock) return
+    addMutation.mutate(selected.id)
   })
-}
 
   const pickColor = (next: string) => {
-    setColor(next)
+    setValue("color", next)
     const sameSize = variants.find(
       (v) => v.color === next && v.size === size && v.stock > 0
     )
     const firstAvailable = variants.find((v) => v.color === next && v.stock > 0)
-    setSize((sameSize ?? firstAvailable ?? variants.find((v) => v.color === next))?.size ?? null)
+    setValue(
+      "size",
+      (sameSize ?? firstAvailable ?? variants.find((v) => v.color === next))
+        ?.size ?? null
+    )
   }
 
   const chip = (active: boolean, disabled = false) =>
@@ -84,9 +113,11 @@ export function PurchasePanel({ price, oldPrice, currency, variants }: Props) {
     )
 
   return (
-    <div className="flex flex-col gap-5">
+    <form onSubmit={onSubmit} className="flex flex-col gap-5">
       <p className="flex items-baseline gap-3">
-        <span className="text-2xl font-bold">{formatPrice(finalPrice, currency)}</span>
+        <span className="text-2xl font-bold">
+          {formatPrice(finalPrice, currency)}
+        </span>
         {discounted && (
           <span className="text-base text-muted-foreground line-through">
             {formatPrice(oldPrice!, currency)}
@@ -131,9 +162,7 @@ export function PurchasePanel({ price, oldPrice, currency, variants }: Props) {
                 key={v.id}
                 type="button"
                 disabled={v.stock < 1}
-                onClick={() => {
-                  setSize(v.size)
-                }}
+                onClick={() => setValue("size", v.size)}
                 className={chip(size === v.size, v.stock < 1)}
               >
                 {v.size}
@@ -160,15 +189,15 @@ export function PurchasePanel({ price, oldPrice, currency, variants }: Props) {
             : t("inStock")}
       </p>
 
-        <div className="sticky bottom-0 -mx-4 bg-background/95 px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur">
-          <Button
-            onClick={handleAdd}
-            disabled={outOfStock || isPending}
-            className="h-12 w-full rounded-xl text-base"
-          >
-            {isPending ? t("adding") : t("addToCart")}
-          </Button>
-        </div>
-    </div>
+      <div className="sticky bottom-0 -mx-4 bg-background/95 px-4 pt-2 pb-[max(1rem,env(safe-area-inset-bottom))] backdrop-blur">
+        <Button
+          type="submit"
+          disabled={outOfStock || addMutation.isPending}
+          className="h-12 w-full rounded-xl text-base"
+        >
+          {addMutation.isPending ? t("adding") : t("addToCart")}
+        </Button>
+      </div>
+    </form>
   )
 }

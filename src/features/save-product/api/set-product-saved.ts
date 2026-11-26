@@ -3,7 +3,7 @@
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/shared/server/db/prisma"
-import { getCurrentUser } from "@/entities/user/api/queries"
+import { getCurrentUser } from "@/entities/user/server"
 
 const schema = z.object({
   productId: z.string().min(1),

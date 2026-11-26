@@ -1,1 +1,1 @@
-export { PurchasePanel } from './ui/PurchasePanel'
+export { PurchasePanel } from "./ui/PurchasePanel"

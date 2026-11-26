@@ -1,11 +1,8 @@
 import { getTranslations } from "next-intl/server"
 import { Container } from "@/shared/client/ui"
 import { parseCatalogParams } from "@/entities/product"
-import {
-  getCategories,
-  getProductFacets,
-  getProducts,
-} from "@/entities/product/api/queries"
+import { getProductFacets, getProducts } from "@/entities/product/server"
+import { getCategories } from "@/entities/category/server"
 import { CatalogFilters } from "@/features/catalog-filters"
 import { ProductList } from "@/widgets/product-list"
 
@@ -31,7 +28,9 @@ export async function CatalogView({
         <CatalogFilters categories={categories} facets={facets} />
 
         {items.length === 0 ? (
-          <p className="py-16 text-center text-muted-foreground">{t("empty")}</p>
+          <p className="py-16 text-center text-muted-foreground">
+            {t("empty")}
+          </p>
         ) : (
           <ProductList
             key={JSON.stringify(filters)}

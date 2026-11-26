@@ -204,20 +204,25 @@ model DeliveryMethod {
 }
 
 enum OrderStatus {
-  PENDING
+  NEW
   CONFIRMED
-  PAID
   SHIPPED
   DONE
   CANCELLED
-  REFUNDED
+}
+
+
+enum PaymentMethod {
+  MANAGER
 }
 
 model Order {
   id               String      @id @default(cuid())
   number           Int         @unique @default(autoincrement())
   userId           String
-  status           OrderStatus @default(PENDING)
+  status          OrderStatus   @default(NEW)
+  paymentMethod   PaymentMethod @default(MANAGER)
+  adminNotifiedAt DateTime?
 
   contactName      String
   contactPhone     String

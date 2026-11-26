@@ -3,11 +3,11 @@ import { getTranslations } from "next-intl/server"
 import { Button, Container } from "@/shared/client/ui"
 import { formatPrice } from "@/shared/client/lib/format-price"
 import { AuthGate } from "@/features/telegram-auth"
-import { getCurrentUser } from "@/entities/user/api/queries"
-import { getUserCart } from "@/entities/cart/api/queries"
+import { getCurrentUser } from "@/entities/user/server"
+import { getUserCart } from "@/entities/cart/server"
 import { CartItem } from "@/entities/cart"
 import { CartItemControls } from "@/features/cart-item-controls"
-import { EmptyCart } from '@/widgets/empty-cart'
+import { EmptyCart } from "@/widgets/empty-cart"
 
 export async function CartView() {
   const t = await getTranslations("cart")
@@ -61,7 +61,11 @@ export async function CartView() {
             disabled={!canCheckout}
             className="h-12 w-full rounded-xl text-base"
           >
-            {canCheckout ? <Link href="/checkout">{t("checkout")}</Link> : t("checkout")}
+            {canCheckout ? (
+              <Link href="/checkout">{t("checkout")}</Link>
+            ) : (
+              t("checkout")
+            )}
           </Button>
         </div>
       </Container>

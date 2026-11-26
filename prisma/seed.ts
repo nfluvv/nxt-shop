@@ -6,7 +6,7 @@ const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 })
 
-const rub = (n: number) => n * 100 
+const rub = (n: number) => n * 100
 
 const COLORS = {
   Чёрный: "#111111",
@@ -26,18 +26,28 @@ const SIZES = {
 type Kind = keyof typeof SIZES
 
 const categories = [
-  { slug: "clothes", name: "Одежда", children: [
-    { slug: "tshirts", name: "Футболки" },
-    { slug: "hoodies", name: "Худи" },
-    { slug: "pants", name: "Брюки" },
-  ]},
-  { slug: "shoes", name: "Обувь", children: [
-    { slug: "sneakers", name: "Кроссовки" },
-  ]},
-  { slug: "accessories", name: "Аксессуары", children: [
-    { slug: "bags", name: "Сумки" },
-    { slug: "caps", name: "Кепки" },
-  ]},
+  {
+    slug: "clothes",
+    name: "Одежда",
+    children: [
+      { slug: "tshirts", name: "Футболки" },
+      { slug: "hoodies", name: "Худи" },
+      { slug: "pants", name: "Брюки" },
+    ],
+  },
+  {
+    slug: "shoes",
+    name: "Обувь",
+    children: [{ slug: "sneakers", name: "Кроссовки" }],
+  },
+  {
+    slug: "accessories",
+    name: "Аксессуары",
+    children: [
+      { slug: "bags", name: "Сумки" },
+      { slug: "caps", name: "Кепки" },
+    ],
+  },
 ]
 
 interface SeedProduct {
@@ -53,30 +63,153 @@ interface SeedProduct {
 }
 
 const products: SeedProduct[] = [
-  { slug: "basic-tee", title: "Базовая футболка оверсайз", description: "Плотный хлопок 220 г/м², свободный крой.", category: "tshirts", price: 2490, kind: "apparel", colors: ["Чёрный", "Белый", "Серый"] },
-  { slug: "graphic-tee", title: "Футболка с принтом", description: "Хлопок, принт шелкографией.", category: "tshirts", price: 2990, oldPrice: 3990, kind: "apparel", colors: ["Белый", "Бежевый"] },
-  { slug: "long-sleeve", title: "Лонгслив в рубчик", description: "Мягкий трикотаж в рубчик.", category: "tshirts", price: 3290, kind: "apparel", colors: ["Чёрный", "Синий"] },
-  { slug: "classic-hoodie", title: "Худи Classic", description: "Футер с начёсом, кенгуру-карман.", category: "hoodies", price: 5990, kind: "apparel", colors: ["Чёрный", "Серый", "Зелёный"] },
-  { slug: "zip-hoodie", title: "Зип-худи", description: "Молния YKK, плотный футер.", category: "hoodies", price: 6490, oldPrice: 7990, kind: "apparel", colors: ["Серый", "Синий"] },
-  { slug: "cargo-pants", title: "Карго-брюки", description: "Широкий крой, боковые карманы.", category: "pants", price: 5490, kind: "apparel", colors: ["Чёрный", "Бежевый", "Зелёный"] },
-  { slug: "straight-jeans", title: "Джинсы прямые", description: "Плотный деним, прямой силуэт.", category: "pants", price: 5990, kind: "apparel", colors: ["Синий", "Чёрный"], soldOut: true },
-  { slug: "runner-sneakers", title: "Кроссовки Runner", description: "Лёгкая подошва, сетчатый верх.", category: "sneakers", price: 8990, oldPrice: 10990, kind: "shoes", colors: ["Белый", "Чёрный"] },
-  { slug: "court-sneakers", title: "Кеды Court", description: "Кожа, вулканизированная подошва.", category: "sneakers", price: 7490, kind: "shoes", colors: ["Белый", "Бежевый"] },
-  { slug: "city-backpack", title: "Рюкзак City", description: "Водоотталкивающая ткань, отсек для ноутбука 15\".", category: "bags", price: 4490, kind: "onesize", colors: ["Чёрный", "Серый"] },
-  { slug: "tote-bag", title: "Шоппер из канваса", description: "Плотный канвас, внутренний карман.", category: "bags", price: 1490, kind: "onesize", colors: ["Бежевый", "Чёрный"] },
-  { slug: "dad-cap", title: "Кепка Dad Cap", description: "Хлопок, регулируемый ремешок.", category: "caps", price: 1790, oldPrice: 2290, kind: "onesize", colors: ["Чёрный", "Синий", "Зелёный"] },
+  {
+    slug: "basic-tee",
+    title: "Базовая футболка оверсайз",
+    description: "Плотный хлопок 220 г/м², свободный крой.",
+    category: "tshirts",
+    price: 2490,
+    kind: "apparel",
+    colors: ["Чёрный", "Белый", "Серый"],
+  },
+  {
+    slug: "graphic-tee",
+    title: "Футболка с принтом",
+    description: "Хлопок, принт шелкографией.",
+    category: "tshirts",
+    price: 2990,
+    oldPrice: 3990,
+    kind: "apparel",
+    colors: ["Белый", "Бежевый"],
+  },
+  {
+    slug: "long-sleeve",
+    title: "Лонгслив в рубчик",
+    description: "Мягкий трикотаж в рубчик.",
+    category: "tshirts",
+    price: 3290,
+    kind: "apparel",
+    colors: ["Чёрный", "Синий"],
+  },
+  {
+    slug: "classic-hoodie",
+    title: "Худи Classic",
+    description: "Футер с начёсом, кенгуру-карман.",
+    category: "hoodies",
+    price: 5990,
+    kind: "apparel",
+    colors: ["Чёрный", "Серый", "Зелёный"],
+  },
+  {
+    slug: "zip-hoodie",
+    title: "Зип-худи",
+    description: "Молния YKK, плотный футер.",
+    category: "hoodies",
+    price: 6490,
+    oldPrice: 7990,
+    kind: "apparel",
+    colors: ["Серый", "Синий"],
+  },
+  {
+    slug: "cargo-pants",
+    title: "Карго-брюки",
+    description: "Широкий крой, боковые карманы.",
+    category: "pants",
+    price: 5490,
+    kind: "apparel",
+    colors: ["Чёрный", "Бежевый", "Зелёный"],
+  },
+  {
+    slug: "straight-jeans",
+    title: "Джинсы прямые",
+    description: "Плотный деним, прямой силуэт.",
+    category: "pants",
+    price: 5990,
+    kind: "apparel",
+    colors: ["Синий", "Чёрный"],
+    soldOut: true,
+  },
+  {
+    slug: "runner-sneakers",
+    title: "Кроссовки Runner",
+    description: "Лёгкая подошва, сетчатый верх.",
+    category: "sneakers",
+    price: 8990,
+    oldPrice: 10990,
+    kind: "shoes",
+    colors: ["Белый", "Чёрный"],
+  },
+  {
+    slug: "court-sneakers",
+    title: "Кеды Court",
+    description: "Кожа, вулканизированная подошва.",
+    category: "sneakers",
+    price: 7490,
+    kind: "shoes",
+    colors: ["Белый", "Бежевый"],
+  },
+  {
+    slug: "city-backpack",
+    title: "Рюкзак City",
+    description: 'Водоотталкивающая ткань, отсек для ноутбука 15".',
+    category: "bags",
+    price: 4490,
+    kind: "onesize",
+    colors: ["Чёрный", "Серый"],
+  },
+  {
+    slug: "tote-bag",
+    title: "Шоппер из канваса",
+    description: "Плотный канвас, внутренний карман.",
+    category: "bags",
+    price: 1490,
+    kind: "onesize",
+    colors: ["Бежевый", "Чёрный"],
+  },
+  {
+    slug: "dad-cap",
+    title: "Кепка Dad Cap",
+    description: "Хлопок, регулируемый ремешок.",
+    category: "caps",
+    price: 1790,
+    oldPrice: 2290,
+    kind: "onesize",
+    colors: ["Чёрный", "Синий", "Зелёный"],
+  },
 ]
 
 const banners = [
   { title: "Новая коллекция", link: "/?collection=new", seed: "banner-new" },
   { title: "Скидки до 30%", link: "/?collection=sale", seed: "banner-sale" },
-  { title: "Худи и свитшоты", link: "/?category=hoodies", seed: "banner-hoodies" },
+  {
+    title: "Худи и свитшоты",
+    link: "/?category=hoodies",
+    seed: "banner-hoodies",
+  },
 ]
 
 const deliveryMethods = [
-  { code: "pickup", name: "Самовывоз", price: 0, needAddress: false, sortOrder: 0 },
-  { code: "courier", name: "Курьер", price: rub(300), needAddress: true, sortOrder: 1 },
-  { code: "cdek", name: "СДЭК (пункт выдачи)", price: rub(250), needAddress: true, sortOrder: 2 },
+  {
+    code: "pickup",
+    name: "Самовывоз",
+    price: 0,
+    needAddress: false,
+    sortOrder: 0,
+  },
+  {
+    code: "courier",
+    name: "Курьер",
+    price: rub(300),
+    needAddress: true,
+    sortOrder: 1,
+  },
+  {
+    code: "cdek",
+    name: "СДЭК (пункт выдачи)",
+    price: rub(250),
+    needAddress: true,
+    sortOrder: 2,
+  },
 ]
 
 const img = (seed: string, w = 800, h = 1066) =>
@@ -97,7 +230,12 @@ async function seedCategories() {
       const child = await prisma.category.upsert({
         where: { slug: ch.slug },
         update: { name: ch.name, sortOrder: j, parentId: parent.id },
-        create: { slug: ch.slug, name: ch.name, sortOrder: j, parentId: parent.id },
+        create: {
+          slug: ch.slug,
+          name: ch.name,
+          sortOrder: j,
+          parentId: parent.id,
+        },
       })
       ids.set(ch.slug, child.id)
     }
@@ -140,13 +278,19 @@ async function seedProducts(categoryIds: Map<string, string>) {
     const variants = p.colors.flatMap((color, ci) =>
       SIZES[p.kind].map((size, si) => ({
         productId: product.id,
-        sku: `${p.slug}-${color}-${size ?? "os"}`.toLowerCase().replace(/\s+/g, "-"),
+        sku: `${p.slug}-${color}-${size ?? "os"}`
+          .toLowerCase()
+          .replace(/\s+/g, "-"),
         size,
         color,
         colorHex: COLORS[color],
         // псевдослучайные, но стабильные остатки; часть вариантов в нуле
-        stock: p.soldOut ? 0 : (pi * 7 + ci * 5 + si * 3) % 9 === 0 ? 0 : ((pi + ci + si) % 6) + 1,
-      })),
+        stock: p.soldOut
+          ? 0
+          : (pi * 7 + ci * 5 + si * 3) % 9 === 0
+            ? 0
+            : ((pi + ci + si) % 6) + 1,
+      }))
     )
     await prisma.productVariant.createMany({ data: variants })
   }
@@ -155,9 +299,24 @@ async function seedProducts(categoryIds: Map<string, string>) {
 
 async function seedCollections(productIds: Map<string, string>) {
   const defs = [
-    { slug: "new", title: "Новинки", sortOrder: 0, slugs: products.slice(0, 6).map((p) => p.slug) },
-    { slug: "hits", title: "Хиты", sortOrder: 1, slugs: ["classic-hoodie", "runner-sneakers", "basic-tee", "cargo-pants"] },
-    { slug: "sale", title: "Скидки", sortOrder: 2, slugs: products.filter((p) => p.oldPrice).map((p) => p.slug) },
+    {
+      slug: "new",
+      title: "Новинки",
+      sortOrder: 0,
+      slugs: products.slice(0, 6).map((p) => p.slug),
+    },
+    {
+      slug: "hits",
+      title: "Хиты",
+      sortOrder: 1,
+      slugs: ["classic-hoodie", "runner-sneakers", "basic-tee", "cargo-pants"],
+    },
+    {
+      slug: "sale",
+      title: "Скидки",
+      sortOrder: 2,
+      slugs: products.filter((p) => p.oldPrice).map((p) => p.slug),
+    },
   ]
 
   for (const d of defs) {
@@ -166,7 +325,9 @@ async function seedCollections(productIds: Map<string, string>) {
       update: { title: d.title, sortOrder: d.sortOrder, isActive: true },
       create: { slug: d.slug, title: d.title, sortOrder: d.sortOrder },
     })
-    await prisma.collectionProduct.deleteMany({ where: { collectionId: collection.id } })
+    await prisma.collectionProduct.deleteMany({
+      where: { collectionId: collection.id },
+    })
     await prisma.collectionProduct.createMany({
       data: d.slugs.map((slug, i) => ({
         collectionId: collection.id,
@@ -205,7 +366,9 @@ async function main() {
   await seedCollections(productIds)
   await seedBanners()
   await seedDelivery()
-  console.log(`✔ Seed: ${products.length} товаров, ${categoryIds.size} категорий`)
+  console.log(
+    `✔ Seed: ${products.length} товаров, ${categoryIds.size} категорий`
+  )
 }
 
 main()

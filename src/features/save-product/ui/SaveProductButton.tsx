@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState } from "react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Bookmark } from "lucide-react"
 import { useTranslations } from "next-intl"
 import { cn } from "@/shared/client/lib/utils"
@@ -14,29 +15,33 @@ interface Props {
 
 export function SaveProductButton({ productId, isSaved, className }: Props) {
   const t = useTranslations("saved")
+  const queryClient = useQueryClient()
   const [saved, setSaved] = useState(isSaved)
-  const [isPending, startTransition] = useTransition()
 
-  const handleClick = () => {
-    if (isPending) return
-
-    const next = !saved
-    setSaved(next)
-    window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light")
-
-    startTransition(async () => {
-      const res = await setProductSaved({ productId, saved: next })
+  const mutation = useMutation({
+    mutationFn: (next: boolean) => setProductSaved({ productId, saved: next }),
+    onMutate: (next) => {
+      setSaved(next) // оптимистично
+      window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light")
+    },
+    onSuccess: (res, next) => {
       if (!res.ok) {
         setSaved(!next)
         window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred("error")
       }
-    })
-  }
+    },
+    onError: (_err, next) => {
+      setSaved(!next)
+      window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred("error")
+    },
+    onSettled: () =>
+      queryClient.invalidateQueries({ queryKey: ["saved-products"] }),
+  })
 
   return (
     <button
       type="button"
-      onClick={handleClick}
+      onClick={() => !mutation.isPending && mutation.mutate(!saved)}
       aria-pressed={saved}
       aria-label={saved ? t("remove") : t("add")}
       className={cn(

@@ -1,6 +1,6 @@
 import "server-only"
 import { prisma } from "@/shared/server/db/prisma"
-import { generateUniqueUsername } from "@/entities/user/lib/generate-username"
+import { generateUniqueUsername } from "@/entities/user/server"
 import type { TelegramUser } from "@/shared/server/telegram/verify-init-data"
 
 export async function findOrCreateTelegramUser(tg: TelegramUser) {

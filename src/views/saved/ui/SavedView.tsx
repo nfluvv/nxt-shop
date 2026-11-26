@@ -2,9 +2,9 @@ import { getTranslations } from "next-intl/server"
 import { Container } from "@/shared/client/ui"
 import { AuthGate } from "@/features/telegram-auth"
 import { ProductCard } from "@/entities/product"
-import { getSavedProducts } from "@/entities/product/api/queries"
-import { getCurrentUser } from "@/entities/user/api/queries"
-import { EmptySaved } from '@/widgets/empty-saved'
+import { getSavedProducts } from "@/entities/product/server"
+import { getCurrentUser } from "@/entities/user/server"
+import { EmptySaved } from "@/widgets/empty-saved"
 
 export async function SavedView() {
   const t = await getTranslations("saved")
@@ -23,10 +23,7 @@ export async function SavedView() {
 
         <div className="grid grid-cols-2 gap-x-3 gap-y-5">
           {products.map((p) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-            />
+            <ProductCard key={p.id} product={p} />
           ))}
         </div>
       </Container>

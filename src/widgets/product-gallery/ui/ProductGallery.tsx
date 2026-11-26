@@ -23,7 +23,7 @@ export function ProductGallery({ images, title }: Props) {
           const el = e.currentTarget
           setIndex(Math.round(el.scrollLeft / el.clientWidth))
         }}
-        className="flex snap-x snap-mandatory overflow-x-auto rounded-2xl scrollbar-none [&::-webkit-scrollbar]:hidden"
+        className="flex snap-x snap-mandatory scrollbar-none overflow-x-auto rounded-2xl [&::-webkit-scrollbar]:hidden"
       >
         {images.map((img, i) => (
           <div

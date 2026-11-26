@@ -1,8 +1,8 @@
 "use server"
 
 import { productFiltersSchema } from "@/entities/product"
-import { getProducts } from "@/entities/product/api/queries"
-import { getCurrentUser } from "@/entities/user/api/queries"
+import { getProducts } from "@/entities/product/server"
+import { getCurrentUser } from "@/entities/user/server"
 
 export async function loadMoreProducts(input: unknown) {
   const filters = productFiltersSchema.parse(input)

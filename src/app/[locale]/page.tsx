@@ -1,5 +1,3 @@
-import { CatalogView } from "@/views/catalog"
+import { MainView } from "@/views/main"
 
-export default function Page(props: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  return <CatalogView searchParams={props.searchParams} />
-}
+export default MainView

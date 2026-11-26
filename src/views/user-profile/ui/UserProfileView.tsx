@@ -1,4 +1,4 @@
-import { getCurrentUser } from "@/entities/user/api/queries"
+import { getCurrentUser } from "@/entities/user/server"
 import { UserProfile } from "@/widgets/user-profile-card"
 import { AuthGate } from "@/features/telegram-auth"
 import { getTranslations } from "next-intl/server"

@@ -1,1 +1,1 @@
-export { CatalogFilters } from './ui/CatalogFilters'
+export { CatalogFilters } from "./ui/CatalogFilters"

@@ -1,3 +1,3 @@
-import { SavedView } from '@/views/saved'
+import { SavedView } from "@/views/saved"
 
 export default SavedView

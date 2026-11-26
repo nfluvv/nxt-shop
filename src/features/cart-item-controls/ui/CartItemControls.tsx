@@ -1,7 +1,7 @@
 "use client"
 
-import { useTransition } from "react"
 import { Minus, Plus, Trash2 } from "lucide-react"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Button } from "@/shared/client/ui"
 import { cn } from "@/shared/client/lib/utils"
 import { removeFromCart, updateCartQuantity } from "../api/actions"
@@ -16,20 +16,25 @@ const haptic = () =>
   window.Telegram?.WebApp?.HapticFeedback?.impactOccurred("light")
 
 export function CartItemControls({ cartItemId, quantity, stock }: Props) {
-  const [isPending, startTransition] = useTransition()
+  const queryClient = useQueryClient()
+  const onSettled = () => queryClient.invalidateQueries({ queryKey: ["cart"] })
+
+  const update = useMutation({
+    mutationFn: (next: number) =>
+      updateCartQuantity({ cartItemId, quantity: next }),
+    onSettled,
+  })
+
+  const remove = useMutation({
+    mutationFn: () => removeFromCart({ cartItemId }),
+    onSettled,
+  })
+
+  const isPending = update.isPending || remove.isPending
 
   const change = (next: number) => {
     haptic()
-    startTransition(async () => {
-      await updateCartQuantity({ cartItemId, quantity: next })
-    })
-  }
-
-  const remove = () => {
-    haptic()
-    startTransition(async () => {
-      await removeFromCart({ cartItemId })
-    })
+    update.mutate(next)
   }
 
   return (
@@ -47,7 +52,9 @@ export function CartItemControls({ cartItemId, quantity, stock }: Props) {
           <span className="sr-only">−</span>
         </Button>
 
-        <span className="min-w-6 text-center text-sm tabular-nums">{quantity}</span>
+        <span className="min-w-6 text-center text-sm tabular-nums">
+          {quantity}
+        </span>
 
         <Button
           type="button"
@@ -67,7 +74,10 @@ export function CartItemControls({ cartItemId, quantity, stock }: Props) {
         variant="ghost"
         size="icon"
         disabled={isPending}
-        onClick={remove}
+        onClick={() => {
+          haptic()
+          remove.mutate()
+        }}
         className="h-8 w-8 rounded-xl text-muted-foreground hover:text-destructive"
       >
         <Trash2 className="h-4 w-4" />

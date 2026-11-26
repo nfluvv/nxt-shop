@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import { getProductBySlug } from "@/entities/product/api/queries"
+import { getProductBySlug } from "@/entities/product/server"
 import { ProductView } from "@/views/product"
 
 type Props = { params: Promise<{ slug: string }> }

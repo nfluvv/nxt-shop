@@ -2,7 +2,10 @@
 CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN');
 
 -- CreateEnum
-CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'CONFIRMED', 'PAID', 'SHIPPED', 'DONE', 'CANCELLED', 'REFUNDED');
+CREATE TYPE "OrderStatus" AS ENUM ('NEW', 'CONFIRMED', 'SHIPPED', 'DONE', 'CANCELLED');
+
+-- CreateEnum
+CREATE TYPE "PaymentMethod" AS ENUM ('MANAGER');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -167,7 +170,9 @@ CREATE TABLE "orders" (
     "id" TEXT NOT NULL,
     "number" SERIAL NOT NULL,
     "userId" TEXT NOT NULL,
-    "status" "OrderStatus" NOT NULL DEFAULT 'PENDING',
+    "status" "OrderStatus" NOT NULL DEFAULT 'NEW',
+    "paymentMethod" "PaymentMethod" NOT NULL DEFAULT 'MANAGER',
+    "adminNotifiedAt" TIMESTAMP(3),
     "contactName" TEXT NOT NULL,
     "contactPhone" TEXT NOT NULL,
     "deliveryMethodId" TEXT NOT NULL,

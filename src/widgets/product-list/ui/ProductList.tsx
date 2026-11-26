@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useRef, useState, useTransition } from "react"
+import { useEffect, useRef } from "react"
+import { useInfiniteQuery } from "@tanstack/react-query"
 import {
   ProductCard,
   type ProductCardData,
@@ -15,41 +16,47 @@ interface Props {
 }
 
 export function ProductList({ initialItems, initialCursor, filters }: Props) {
-  const [items, setItems] = useState(initialItems)
-  const [cursor, setCursor] = useState(initialCursor)
-  const [isPending, startTransition] = useTransition()
   const sentinel = useRef<HTMLDivElement>(null)
 
+  const { data, hasNextPage, isFetchingNextPage, fetchNextPage } =
+    useInfiniteQuery({
+      queryKey: ["products", filters],
+      initialPageParam: undefined as string | undefined,
+      queryFn: ({ pageParam }) =>
+        loadMoreProducts({ ...filters, cursor: pageParam }),
+      getNextPageParam: (last) => last.nextCursor ?? undefined,
+      initialData: {
+        pages: [{ items: initialItems, nextCursor: initialCursor }],
+        pageParams: [undefined],
+      },
+      staleTime: 60_000,
+    })
+
+  const items = data.pages.flatMap((p) => p.items)
+
   useEffect(() => {
-    if (!cursor || !sentinel.current) return
+    const node = sentinel.current
+    if (!hasNextPage || !node) return
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting || isPending) return
-        startTransition(async () => {
-          const res = await loadMoreProducts({ ...filters, cursor })
-          setItems((prev) => [...prev, ...res.items])
-          setCursor(res.nextCursor)
-        })
+        if (entry.isIntersecting && !isFetchingNextPage) fetchNextPage()
       },
       { rootMargin: "400px" }
     )
 
-    observer.observe(sentinel.current)
+    observer.observe(node)
     return () => observer.disconnect()
-  }, [cursor, isPending, filters])
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return (
     <>
       <div className="grid grid-cols-2 gap-x-3 gap-y-5">
         {items.map((p) => (
-          <ProductCard
-            key={p.id}
-            product={p}
-          />
+          <ProductCard key={p.id} product={p} />
         ))}
       </div>
-      {cursor && <div ref={sentinel} className="h-10" />}
+      {hasNextPage && <div ref={sentinel} className="h-10" />}
     </>
   )
 }
