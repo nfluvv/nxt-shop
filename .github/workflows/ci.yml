@@ -45,13 +45,7 @@ jobs:
       - name: Type check
         run: npx tsc --noEmit
 
-      - name: Debug DATABASE_URL
-        run: |
-          if [ -z "$DATABASE_URL" ]; then
-            echo "ERROR: DATABASE_URL IS EMPTY"
-            exit 1
-          else
-            echo "OK: DATABASE_URL EXISTS"
-          fi
+      - name: Push schema to test DB
+        run: npx prisma db push
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.CI_DATABASE_URL }}
