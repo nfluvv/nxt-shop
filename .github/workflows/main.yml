@@ -48,4 +48,4 @@ jobs:
       - name: Push schema to test DB
         run: npx prisma db push
         env:
-          DATABASE_URL: ${{ secrets.CI_DATABASE_URL }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
